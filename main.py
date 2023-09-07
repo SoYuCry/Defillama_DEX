@@ -154,7 +154,35 @@ def Add2together(filename,nameA,nameB,name):
   with open(filename, 'w', newline='') as csvfile:
       writer = csv.writer(csvfile)
       writer.writerows(lines)
-# 将有前50（大致的前20的候选人）的协议手动合并
+def ChangeName(filename,nameA,Newname):
+
+  data = pd.read_csv(filename)
+
+  # 找到名字是A和B的两行，并将它们的值加起来
+  row_A = data.loc[data['name'] == nameA].iloc[:, 1:]
+  print("comebining"+ nameA +' to '+ Newname)
+
+  row_A_index = int(row_A.index[0])
+  row_new_value = [Newname]
+  for i in range(1, data.shape[1]):
+      row_new_value.append(str(data.iloc[row_A_index, i] ))
+
+  data.drop(row_A_index, inplace=True)
+  data.drop(Newname, inplace=True)
+  data.to_csv(filename, index=False)
+
+  # Read the existing data from the CSV file
+  with open(filename, 'r', newline='') as csvfile:
+      reader = csv.reader(csvfile)
+      lines = list(reader)
+
+  # Insert the new row at the desired location (after row_A_index)
+  lines.insert(row_A_index + 1, row_new_value)
+
+  # Write the updated data back to the CSV file
+  with open(filename, 'w', newline='') as csvfile:
+      writer = csv.writer(csvfile)
+      writer.writerows(lines)
 def Intergate():
   Add3together(filename = 'coingecko_volume_daily.csv',nameA = 'Uniswap-V1',nameB = 'Uniswap-V2',nameC = 'Uniswap-V3',name='Uniswap')
 
@@ -184,8 +212,13 @@ def Intergate():
 
   Add3together(filename = 'coingecko_volume_daily.csv',nameA = 'Zyberswap-AMM',nameB = 'Zyberswap-V3',nameC = 'ZyberSwap-Stableswap',name='Zyberswap')
 
+  ChangeName(filename = 'coingecko_volume_daily.csv',nameA = 'Curve-DEX',Newname='Curve')
+  
+  ChangeName(filename = 'coingecko_volume_daily.csv',nameA = 'Maverick-Protocol',Newname='Maverick')
+
+
 if __name__ == "__main__":
   INTERAL = 30
   dexlist = getalldex()
-  getvolume(dexlist,INTERAL)
+  getvolume(dexlist,iteral = INTERAL)
   Intergate()

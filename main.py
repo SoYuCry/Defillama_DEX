@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 import csv
+import os
 import pandas as pd
 
 # 获取 Defillama 的所有 dex
@@ -17,6 +18,18 @@ def getvolume(dexlist,iteral=30):
   unix_time = []  # 日期
   writedate = False # 首次循环先把日期添加好，再做交易量的添加
   volume = []
+  # 判断是否已经爬取过
+  if os.path.exists('progress.txt'):
+    with open('progress.txt', 'r') as f:
+              last_dex = f.readline().strip()
+              start_idx = dexlist.index(last_dex)
+              dexlist = dexlist[start_idx+1:]
+              writedate = True
+  else:
+     writedate = False
+     
+
+
   for j in range(0,len(dexlist)):
     result = requests.get('https://api.llama.fi/summary/dexs/'+ dexlist[j] +'?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true&dataType=dailyVolume').json()
     print("processing:" + dexlist[j])
@@ -43,8 +56,15 @@ def getvolume(dexlist,iteral=30):
               writer.writerow(volume)
               # 写入后对 list 清零
               volume = []
+
+            with open('progress.txt', 'w') as f:
+              f.write(dexlist[j]) 
           except:
               volume = []
+    else:
+      # print('Error:len(result) != 1:')
+      raise Exception('Error:len(result) != 1:')
+       
 # 将有四个子协议的交易量加起来
 def Add4together(filename,nameA,nameB,nameC,nameD,name):
   data = pd.read_csv(filename)
@@ -168,7 +188,6 @@ def ChangeName(filename,nameA,Newname):
       row_new_value.append(str(data.iloc[row_A_index, i] ))
 
   data.drop(row_A_index, inplace=True)
-  data.drop(Newname, inplace=True)
   data.to_csv(filename, index=False)
 
   # Read the existing data from the CSV file
